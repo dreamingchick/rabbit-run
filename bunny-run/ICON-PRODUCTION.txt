@@ -1,0 +1,6 @@
+Tool: built-in ImageGen (transparent_background: false)
+Final assets: dist/assets/icons/icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png
+Build packaging: resize to 192 / 512 / 180 px and add green safe-area padding for OS masks.
+
+Final image prompt:
+Use case stylized-concept. Production square app icon for BUNNY RUN game, based on approved rabbit A in the reference. Exactly ONE adorable ivory-white plump rabbit, orange neckerchief, pink inner ears one bent ear tip, peach cheeks, shiny expressive dark eyes, fluffy texture in a crisp painterly 2D storybook style. Bust portrait facing slightly right, joyful determined expression. Large recognizable face. Full ears and orange scarf entirely within centered safe circle of diameter 76% of the square, with extra green padding all around. Solid rich sage green background #527a47 covering full square edge-to-edge, with a very subtle lighter central glow. No rounded outer corners (the OS supplies its own mask), no border, no text, no lettering, no shadows outside character, no additional objects or scenery. Icon must stay readable when reduced to 48px. 1024x1024 square.

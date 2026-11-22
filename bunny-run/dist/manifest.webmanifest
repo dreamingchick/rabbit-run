@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "버니 런 — 들판의 작은 모험",
+  "short_name": "버니 런",
+  "description": "토끼와 함께 장애물을 뛰어넘고 당근을 모으는 달리기 게임",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#dcebd1",
+  "theme_color": "#527a47",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {"src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
