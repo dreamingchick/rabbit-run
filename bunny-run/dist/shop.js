@@ -2,45 +2,32 @@
  'use strict';
  const E=window.BunnyEconomy,$=s=>document.querySelector(s);
  let storage;try{storage=localStorage;}catch{storage={getItem(){throw Error('unavailable')},setItem(){throw Error('unavailable')}};}
- const store=E.createStore(storage),dialog=$('#shopDialog');
- let motion={state:'ready',speedTime:0,jumpTime:0};
- const text=(el,value)=>{if(el.textContent!==String(value))el.textContent=String(value)};
- const announce=message=>text($('#announcement'),message);
- const status=message=>{text($('#shopFeedback'),message);announce(message)};
- const name=kind=>kind==='speed'?'이동속도 물약':'점프 물약';
+ const store=E.createStore(storage),dialog=$('#shopDialog');let state='ready',current={speed:0,jump:0};
+ const text=(el,v)=>{if(el.textContent!==String(v))el.textContent=String(v)};
+ const status=message=>{text($('#shopFeedback'),message);text($('#announcement'),message)};
+ const name=kind=>kind==='speed'?'이동속도':'점프 높이';
  function render(){
-  const inventory=store.snapshot();
-  for(const selector of ['#menuCoins','#shopCoins'])text($(selector),inventory.coins.toLocaleString('ko-KR'));
+  const save=store.snapshot();for(const id of ['#menuCoins','#shopCoins'])text($(id),save.coins.toLocaleString('ko-KR'));
   for(const kind of ['speed','jump']){
-   const qty=$('#qty-'+kind),buy=$('#buy-'+kind),count=Number(qty.value),valid=Number.isInteger(count)&&count>=1&&count<=99;
-   text($('#owned-'+kind),inventory[kind]);
-   const full=inventory[kind]>=99,overflow=valid&&inventory[kind]+count>99,lacking=valid&&inventory.coins<count*E.PRICE;
-   buy.disabled=full||!valid||overflow||lacking;
-   text(buy,full?'최대 수량 보유':!valid?'수량 확인':overflow?'최대 99개 보유':lacking?'코인 부족':(count*E.PRICE).toLocaleString('ko-KR')+' 코인 · 구매');
-   buy.setAttribute('aria-label',name(kind)+' '+(valid?count:0)+'개 구매');
+   const level=save.levels[kind],price=E.cost(level),button=$('#upgrade-'+kind),select=$('#select-'+kind);
+   text($('#level-'+kind),level);text($('#effect-'+kind),'+'+(level*10)+'%');
+   button.disabled=price===null||save.coins<price;
+   text(button,price===null?'최고 레벨 달성':(level+1)+'레벨 강화 · '+price.toLocaleString('ko-KR')+' 코인');
+   text($('#next-'+kind),price===null?'모든 성장을 마쳤어요.':'다음 효과 +'+((level+1)*10)+'%');
+   const options=Array.from({length:level+1},(_,n)=>'<option value="'+n+'">Lv.'+n+' · +'+(n*10)+'%</option>').join('');if(select.innerHTML!==options)select.innerHTML=options;select.value=String(save.selected[kind]);
   }
-  update(motion);
+  text($('#migrationNote'),save.migrationRefund?'기존 보유 물약을 '+save.migrationRefund.toLocaleString('ko-KR')+'코인으로 환불했어요.':'특성은 영구 유지되며 코인과 함께 이 브라우저에 저장됩니다.');update({state,traits:current});
  }
- function update(next){
-  motion=next;$('#potionBar').hidden=motion.state!=='running'&&motion.state!=='paused';
-  const inventory=store.snapshot();
-  for(const kind of ['speed','jump']){
-   const remaining=motion[kind+'Time']||0,button=$('#use-'+kind);
-   text($('#stock-'+kind),inventory[kind]);
-   text($('#timer-'+kind),remaining>0?Math.ceil(remaining)+'초':(kind==='speed'?'속도 +25%':'높이 +25%'));
-   button.disabled=motion.state!=='running'||remaining>0||inventory[kind]===0;
-   button.classList.toggle('active',remaining>0);
-   button.setAttribute('aria-label',name(kind)+', '+inventory[kind]+'개 보유'+(remaining>0?', '+Math.ceil(remaining)+'초 남음':', 사용'));
-  }
+ function update(next){state=next.state;current=next.traits||current;const inRun=state==='running'||state==='paused';$('#runTraits').hidden=!inRun;
+  for(const kind of ['speed','jump']){$('#select-'+kind).disabled=inRun;text($('#active-'+kind),'Lv.'+current[kind]+' · +'+(current[kind]*10)+'%');}
+  text($('#selectionHint'),inRun?'현재 달리기의 레벨은 고정돼요. 변경한 강화는 다음 판부터 적용됩니다.':'구매한 범위에서 적용 레벨을 선택한 뒤 시작하세요.');
  }
- $('#openShop').addEventListener('click',()=>{document.activeElement?.blur();window.dispatchEvent(new Event('bunny:pause'));store.refresh();render();status('각 1,000코인 · 종류별 최대 99개 · 달리는 중 사용');dialog.showModal();});
+ $('#openShop').addEventListener('click',()=>{document.activeElement?.blur();window.dispatchEvent(new Event('bunny:pause'));store.refresh();render();status('최대 5레벨 · 레벨당 10% · 강화 비용은 매번 2배');dialog.showModal();});
  $('#closeShop').addEventListener('click',()=>dialog.close());
  for(const kind of ['speed','jump']){
-  $('#qty-'+kind).addEventListener('input',render);
-  $('#buy-'+kind).addEventListener('click',()=>{const count=Number($('#qty-'+kind).value),result=store.buy(kind,count);render();status(result.ok?name(kind)+' '+count+'개를 구매했어요.':result.message);});
-  $('#use-'+kind).addEventListener('click',()=>{document.activeElement?.blur();window.dispatchEvent(new CustomEvent('bunny:use-potion',{detail:kind}));});
+  $('#upgrade-'+kind).addEventListener('click',()=>{const r=store.upgrade(kind);render();status(r.ok?name(kind)+' '+r.level+'레벨로 강화했어요.':r.message);});
+  $('#select-'+kind).addEventListener('change',()=>{if(state==='running'||state==='paused'){render();return;}const r=store.select(kind,Number($('#select-'+kind).value));render();if(!r.ok)status(r.message);});
  }
  window.addEventListener('storage',event=>{if(event.key===E.KEY||event.key===null){store.refresh();render();}});
- window.BunnyShop={update,consume(kind){const result=store.use(kind);render();if(!result.ok)announce(result.message);return result.ok;},reward(runId,distance,carrots){const result=store.reward(runId,distance,carrots);render();return result;}};
- render();
+ window.BunnyShop={update,selected(){store.refresh();render();return {...store.snapshot().selected};},reward(runId,distance,carrots){const r=store.reward(runId,distance,carrots);render();return r;}};render();
 })();

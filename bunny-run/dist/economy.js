@@ -1,43 +1,30 @@
-/* Local economy; commits balance and stock together before exposing a change. */
 (function(root){
  'use strict';
- const KEY='bunny-run-economy-v1',PRICE=1000,LIMIT=99,DURATION=10,BOOST=1.25;
+ const KEY='bunny-run-traits-v2',LEGACY='bunny-run-economy-v1',MAX_LEVEL=5;
  const valid=k=>k==='speed'||k==='jump';
- const integer=(n,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
+ const int=(n,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
+ const empty=()=>({coins:0,levels:{speed:0,jump:0},selected:{speed:0,jump:0},lastRun:null,migrationRefund:0});
+ const cost=level=>int(level,4)?1000*2**level:null;
+ function effects(selected){return {speedFactor:1+selected.speed*.1,jumpImpulse:640*Math.sqrt(1+selected.jump*.1)};}
  function createStore(storage){
-  let value={coins:0,speed:0,jump:0,lastRun:null};
-  function load(){try{const raw=storage.getItem(KEY);if(raw===null)value={coins:0,speed:0,jump:0,lastRun:null};if(raw!==null){const v=JSON.parse(raw);if(!v||!integer(v.coins)||!integer(v.speed,LIMIT)||!integer(v.jump,LIMIT)||!(v.lastRun===null||typeof v.lastRun==='string'))throw Error('invalid save');value={coins:v.coins,speed:v.speed,jump:v.jump,lastRun:v.lastRun};}return true;}catch{return false;}}
-  const snapshot=()=>({...value});
-  load();
+  let value=empty();
+  const snapshot=()=>({...value,levels:{...value.levels},selected:{...value.selected}});
+  function load(){try{
+   const raw=storage.getItem(KEY);
+   if(raw!==null){const v=JSON.parse(raw);if(!v||!int(v.coins)||!v.levels||!v.selected||!['speed','jump'].every(k=>int(v.levels[k],5)&&int(v.selected[k],v.levels[k]))||!(v.lastRun===null||typeof v.lastRun==='string')||!int(v.migrationRefund??0))throw Error('invalid save');value={coins:v.coins,levels:{...v.levels},selected:{...v.selected},lastRun:v.lastRun,migrationRefund:v.migrationRefund??0};}
+   else{
+    const old=storage.getItem(LEGACY);const next=empty();
+    if(old!==null){const v=JSON.parse(old);if(!v||!int(v.coins)||!int(v.speed,99)||!int(v.jump,99))throw Error('invalid legacy');const refund=(v.speed+v.jump)*1000;next.coins=Math.min(Number.MAX_SAFE_INTEGER,v.coins+refund);next.lastRun=typeof v.lastRun==='string'?v.lastRun:null;next.migrationRefund=refund;storage.setItem(KEY,JSON.stringify(next));}
+    value=next;
+   }return true;
+  }catch{return false;}}
   const fail=message=>({ok:false,message,snapshot:snapshot()});
-  function commit(next,extra={}){try{storage.setItem(KEY,JSON.stringify(next));value=next;return {ok:true,...extra,snapshot:snapshot()};}catch{return fail('저장 공간을 사용할 수 없어요. 브라우저의 사이트 데이터 설정을 확인해주세요.');}}
-  function reward(runId,distance,carrots){
-   if(typeof runId!=='string'||!runId||!Number.isFinite(distance)||distance<0||!integer(carrots))return fail('기록을 확인할 수 없어요.');
-   if(!load())return fail('저장된 코인 정보를 읽을 수 없어요.');
-   const earned=Math.floor(Math.floor(distance)/3)+carrots;
-   if(!Number.isSafeInteger(earned))return fail('기록을 확인할 수 없어요.');
-   if(value.lastRun===runId)return {ok:true,earned:0,duplicate:true,snapshot:snapshot()};
-   return commit({...value,coins:Math.min(Number.MAX_SAFE_INTEGER,value.coins+earned),lastRun:runId},{earned});
-  }
-  function buy(kind,quantity=1){
-   if(!valid(kind)||!Number.isInteger(quantity)||quantity<1||quantity>LIMIT)return fail('구매 수량은 1~99개로 입력해주세요.');
-   if(!load())return fail('저장된 코인 정보를 읽을 수 없어요.');
-   if(value[kind]+quantity>LIMIT)return fail('이 물약은 최대 99개까지 보유할 수 있어요.');
-   if(value.coins<PRICE*quantity)return fail('코인이 부족해요. 달리기로 코인을 모아보세요.');
-   return commit({...value,coins:value.coins-PRICE*quantity,[kind]:value[kind]+quantity});
-  }
-  function use(kind){
-   if(!valid(kind))return fail('물약을 확인할 수 없어요.');
-   if(!load())return fail('저장된 물약 정보를 읽을 수 없어요.');
-   if(value[kind]<1)return fail('보유한 물약이 없어요. 상점에서 구매해주세요.');
-   return commit({...value,[kind]:value[kind]-1});
-  }
-  return {snapshot,refresh(){load();return snapshot()},reward,buy,use};
+  function commit(next,extra={}){try{storage.setItem(KEY,JSON.stringify(next));value=next;return {ok:true,...extra,snapshot:snapshot()};}catch{return fail('저장하지 못했어요. 브라우저의 사이트 데이터 설정을 확인해주세요.');}}
+  load();
+  function reward(runId,distance,carrots){if(typeof runId!=='string'||!runId||!Number.isFinite(distance)||distance<0||!int(carrots))return fail('기록을 확인할 수 없어요.');if(!load())return fail('저장 정보를 읽을 수 없어요.');const earned=Math.floor(distance/3)+carrots;if(!int(earned))return fail('기록을 확인할 수 없어요.');if(value.lastRun===runId)return {ok:true,earned:0,duplicate:true,snapshot:snapshot()};return commit({...value,coins:Math.min(Number.MAX_SAFE_INTEGER,value.coins+earned),lastRun:runId},{earned});}
+  function upgrade(kind){if(!valid(kind))return fail('특성을 확인해주세요.');if(!load())return fail('저장 정보를 읽을 수 없어요.');const price=cost(value.levels[kind]);if(price===null)return fail('최고 레벨이에요.');if(value.coins<price)return fail('코인이 부족해요.');const level=value.levels[kind]+1;return commit({...value,coins:value.coins-price,levels:{...value.levels,[kind]:level},selected:{...value.selected,[kind]:level}},{level,price});}
+  function select(kind,level){if(!valid(kind)||!int(level,5))return fail('적용 레벨을 확인해주세요.');if(!load())return fail('저장 정보를 읽을 수 없어요.');if(level>value.levels[kind])return fail('먼저 해당 레벨까지 강화해주세요.');return commit({...value,selected:{...value.selected,[kind]:level}});}
+  return {snapshot,refresh(){load();return snapshot()},reward,upgrade,select};
  }
- function createBuffs(){
-  const remaining={speed:0,jump:0};
-  return {remaining,reset(){remaining.speed=remaining.jump=0;},activate(kind){if(!valid(kind)||remaining[kind]>0)return false;remaining[kind]=DURATION;return true;},tick(dt){if(!Number.isFinite(dt)||dt<=0)return;for(const kind of ['speed','jump'])remaining[kind]=Math.max(0,remaining[kind]-dt);},speedFactor(){return remaining.speed>0?BOOST:1;},jumpImpulse(){return 640*Math.sqrt(remaining.jump>0?BOOST:1);}};
- }
- const api={KEY,PRICE,LIMIT,DURATION,BOOST,createStore,createBuffs};
- if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BunnyEconomy=api;
+ const api={KEY,LEGACY,MAX_LEVEL,cost,effects,createStore};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.BunnyEconomy=api;
 })(globalThis);

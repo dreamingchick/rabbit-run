@@ -8,6 +8,7 @@ class SpriteImage{complete=true;naturalWidth=1536;naturalHeight=1024;addEventLis
 const sandbox={console,Math,Image:SpriteImage,HTMLButtonElement:Button,innerWidth:1280,innerHeight:800,devicePixelRatio:1,performance:{now:()=>0},localStorage:{getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)},requestAnimationFrame(){},addEventListener:(k,f)=>events[k]=f,document:{querySelector:element,activeElement:{blur(){}},addEventListener(){}},window:{}};
 sandbox.window.addEventListener=sandbox.addEventListener;
 vm.runInNewContext(fs.readFileSync('bunny-run/dist/economy.js','utf8'),sandbox);sandbox.window.BunnyEconomy=sandbox.BunnyEconomy;vm.runInNewContext(fs.readFileSync('bunny-run/dist/shop.js','utf8'),sandbox);
+vm.runInNewContext(fs.readFileSync('bunny-run/dist/terrain.js','utf8'),sandbox);sandbox.window.BunnyTerrain=sandbox.BunnyTerrain;
 vm.runInNewContext(fs.readFileSync('bunny-run/dist/bunny-sprites.js','utf8'),sandbox);
 let src=fs.readFileSync('bunny-run/dist/game.js','utf8').replace('requestAnimationFrame(frame);\n})();','globalThis.test={start,jump,pause,step,frame,get time(){return time},get landing(){return landing},get status(){return state},get y(){return y},get distance(){return distance},get carrots(){return carrots},get items(){return items}};\n})();');
 vm.runInNewContext(src,sandbox);const g=sandbox.test;
@@ -21,7 +22,7 @@ assert.equal(pose({state:'ready'}),8);assert.equal(pose({state:'ready',time:4.5}
 assert.equal(pose({y:10,vy:640,takeoff:.1}),4);assert.equal(pose({y:100,vy:200}),5);assert.equal(pose({y:100,vy:-200}),6);assert.equal(pose({landing:.1}),7);assert.equal(pose({state:'over'}),11);
 assert.equal(new Set(Array.from({length:60},(_,i)=>pose({time:i/60}))).size,4);
 g.jump();g.step(.2);g.pause();const frozen=g.time;g.step(.5);assert.equal(g.time,frozen,'paused animation does not advance');g.pause();
-for(let i=0;i<60;i++)g.step(1/120);assert(g.landing>0,'landing pose is triggered');
+for(let i=0;i<70;i++)g.step(1/120);assert(g.landing>0,'landing pose is triggered');
 assert(draws.length>0,'sprites actually drawn');
 for(const [x,y,w,h] of sprite.frames){assert(x>=0&&y>=0&&x+w<=1536&&y+h<=1024,'valid atlas bounds');}
 assert.equal(draws[0][1],72,'idle sprite drawn from A atlas');
