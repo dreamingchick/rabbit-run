@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#dcebd1"><title>버니 런 — 들판의 작은 모험</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main id="game">
+ <canvas id="scene" aria-label="장애물을 뛰어넘고 당근을 모으는 토끼 달리기 게임"></canvas>
+ <header><a class="brand" href="./" aria-label="버니 런 홈"><span class="brand-icon">♧</span> BUNNY RUN<span class="version">검수 버전 0.2</span></a><div class="tools"><button id="sound" aria-label="소리 켜기" title="소리 켜기">소리 꺼짐</button><button id="pause" aria-label="일시정지" disabled>Ⅱ</button></div></header>
+ <section class="hud" aria-label="게임 기록"><div><span>달린 거리</span><strong><b id="distance">0</b><small>m</small></strong></div><div><span>모은 당근</span><strong class="carrots">🥕 <b id="carrots">0</b></strong></div><div class="best"><span>최고 기록</span><strong><b id="best">0</b><small>m</small></strong></div></section>
+ <section id="overlay" class="intro"><div class="eyebrow">A LITTLE HOP, A BIG ADVENTURE</div><h1 id="title">폴짝, 폴짝.<br>모험을 시작해요!</h1><p id="message">작은 토끼와 함께 초록 들판을 달려요.<br>장애물을 넘고, 아삭한 당근을 모아보세요.</p><button class="primary" id="start">달리기 시작 <span>▶</span></button><p class="hint" id="introHint"><kbd>Space</kbd> 또는 화면을 터치해 점프</p></section>
+ <div class="running-note" id="runningNote" hidden>좋아요! 나만의 속도로 폴짝.</div>
+ <footer><span class="location"><i></i> 햇살 가득한 당근 들판</span><div class="controls"><span><kbd>Space</kbd> 점프</span><span><kbd>P</kbd> 일시정지</span><span>화면 터치로도 플레이</span></div><span class="edition">MEADOW ADVENTURE / 01</span></footer>
+ <button id="mobileJump" aria-label="점프" hidden>폴짝! <span>⌃</span></button>
+ <div id="announcement" class="sr-only" aria-live="polite"></div>
+</main><script src="bunny-sprites.js"></script><script src="game.js"></script>
+</body></html>

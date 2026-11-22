@@ -1,1 +1,44 @@
 # rabbit-run
+
+토끼가 장애물을 뛰어넘고 당근을 모으는 브라우저 달리기 게임입니다. 검수 버전 0.2에는 A안 토끼 디자인과 달리기·점프·착지·대기·충돌 애니메이션이 적용되어 있습니다.
+
+## 실행
+
+별도의 빌드나 패키지 설치가 필요하지 않습니다. 저장소를 내려받고 `bunny-run/dist/index.html`을 브라우저에서 열면 됩니다.
+
+로컬 웹 서버로 실행하려면 저장소 루트에서 다음 명령을 실행하세요.
+
+```sh
+python -m http.server 4173 --directory bunny-run/dist
+```
+
+브라우저에서 `http://localhost:4173`을 엽니다. Google Fonts는 인터넷에 연결되어 있을 때 불러오며, 연결되지 않아도 시스템 글꼴로 게임을 실행할 수 있습니다.
+
+## 조작
+
+- Space / 위쪽 방향키 / 화면 터치: 점프
+- P: 일시정지 및 계속하기
+- Enter: 시작 및 재시작
+- 화면 상단 버튼: 소리 켜기/끄기
+
+장애물에 부딪히면 게임이 종료됩니다. 최고 거리는 해당 브라우저의 로컬 저장소에 보관됩니다.
+
+## 파일
+
+- `bunny-run/dist/index.html`: 게임 화면
+- `bunny-run/dist/style.css`: 반응형 스타일
+- `bunny-run/dist/game.js`: 게임 루프, 점프 물리, 충돌, 점수
+- `bunny-run/dist/bunny-sprites.js`: A안 스프라이트와 상태별 애니메이션
+- `bunny-run/dist/assets/bunny-a-atlas.png`: 투명 배경 12자세 스프라이트 시트
+- `bunny-a-production.txt`: 이미지 제작 도구와 프롬프트
+- `check-game.cjs`: DOM·Canvas를 모의한 게임 및 애니메이션 검사
+
+## 검사
+
+Node.js가 설치된 환경에서 저장소 루트에서 실행합니다.
+
+```sh
+node check-game.cjs
+```
+
+점프·착지, 일시정지, 당근 수집, 충돌, 재시작, 스프라이트 선택과 좌표를 검사합니다. 실제 브라우저의 시각 품질·키보드·터치 검증은 별도로 필요합니다.
