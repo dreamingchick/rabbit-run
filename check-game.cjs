@@ -1,11 +1,13 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
-const elements=new Map(),events={};
+const elements=new Map(),events={},saved=new Map();
 class Button{};
 const draws=[];
 const ctx=new Proxy({createLinearGradient:()=>({addColorStop(){}}),drawImage:(...args)=>draws.push(args)},{get:(o,k)=>o[k]||(()=>{})});
-const element=s=>{if(!elements.has(s))elements.set(s,{hidden:false,textContent:'',innerHTML:'',getContext:()=>ctx,setAttribute(){},addEventListener(k,f){this[k]=f}});return elements.get(s)};
+const element=s=>{if(!elements.has(s))elements.set(s,{hidden:false,textContent:'',innerHTML:'',value:'1',classList:{toggle(){}},showModal(){this.open=true},close(){this.open=false},getContext:()=>ctx,setAttribute(){},addEventListener(k,f){this[k]=f}});return elements.get(s)};
 class SpriteImage{complete=true;naturalWidth=1536;naturalHeight=1024;addEventListener(){}}
-const sandbox={console,Math,Image:SpriteImage,HTMLButtonElement:Button,innerWidth:1280,innerHeight:800,devicePixelRatio:1,performance:{now:()=>0},localStorage:{getItem:()=>0,setItem(){}},requestAnimationFrame(){},addEventListener:(k,f)=>events[k]=f,document:{querySelector:element,activeElement:{blur(){}},addEventListener(){}},window:{}};
+const sandbox={console,Math,Image:SpriteImage,HTMLButtonElement:Button,innerWidth:1280,innerHeight:800,devicePixelRatio:1,performance:{now:()=>0},localStorage:{getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)},requestAnimationFrame(){},addEventListener:(k,f)=>events[k]=f,document:{querySelector:element,activeElement:{blur(){}},addEventListener(){}},window:{}};
+sandbox.window.addEventListener=sandbox.addEventListener;
+vm.runInNewContext(fs.readFileSync('bunny-run/dist/economy.js','utf8'),sandbox);sandbox.window.BunnyEconomy=sandbox.BunnyEconomy;vm.runInNewContext(fs.readFileSync('bunny-run/dist/shop.js','utf8'),sandbox);
 vm.runInNewContext(fs.readFileSync('bunny-run/dist/bunny-sprites.js','utf8'),sandbox);
 let src=fs.readFileSync('bunny-run/dist/game.js','utf8').replace('requestAnimationFrame(frame);\n})();','globalThis.test={start,jump,pause,step,frame,get time(){return time},get landing(){return landing},get status(){return state},get y(){return y},get distance(){return distance},get carrots(){return carrots},get items(){return items}};\n})();');
 vm.runInNewContext(src,sandbox);const g=sandbox.test;

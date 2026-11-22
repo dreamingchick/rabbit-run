@@ -14,7 +14,7 @@ async function fetchFromWorker(url,mode='cors',method='GET'){let result;handlers
  stores.set('bunny-run-old',new Map());stores.set('another-app',new Map());await lifecycle('activate');assert(claimed);assert(!stores.has('bunny-run-old'));assert(stores.has('another-app'));
  online=false;
  assert.equal((await fetchFromWorker(origin+'?from=homescreen','navigate')).asset,'index.html');
- for(const asset of ['game.js','bunny-sprites.js','style.css','pwa.js','manifest.webmanifest','assets/bunny-a-atlas.png','assets/icons/icon-512.png'])assert.equal((await fetchFromWorker(origin+asset)).asset,asset);
+ for(const asset of ['game.js','economy.js','shop.js','bunny-sprites.js','style.css','pwa.js','manifest.webmanifest','assets/bunny-a-atlas.png','assets/icons/icon-512.png'])assert.equal((await fetchFromWorker(origin+asset)).asset,asset);
  assert.equal((await fetchFromWorker(origin+'assets/bunny-a-atlas.png?retry=123')).asset,'assets/bunny-a-atlas.png');
  assert.equal(await fetchFromWorker('https://elsewhere.example/style.css'),undefined);assert.equal(await fetchFromWorker(origin+'api','cors','POST'),undefined);assert.equal(await fetchFromWorker(origin+'unknown'),undefined);
  handlers.message({data:{type:'SKIP_WAITING'}});assert(skip);
