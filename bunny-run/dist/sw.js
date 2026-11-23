@@ -1,5 +1,5 @@
 'use strict';
-const CACHE='bunny-run-v05-traits-20261122a';
+const CACHE='bunny-run-v05-dads-arcade-20261123';
 const SHELL=['./','./index.html','./style.css','./game.js','./bunny-sprites.js','./pwa.js','./economy.js','./shop.js','./terrain.js','./manifest.webmanifest','./assets/bunny-a-atlas.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/icon-maskable-512.png','./assets/icons/apple-touch-icon.png'];
 const assetURLs=new Set(SHELL.map(path=>new URL(path,self.registration.scope).href));
 self.addEventListener('install',event=>{
